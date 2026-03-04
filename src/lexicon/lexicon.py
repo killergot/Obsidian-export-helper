@@ -1,4 +1,4 @@
-LEXICON_RU: dict[str, str | dict[str, str]] = {
+LEXICON_RU: dict[str, str] = {
     "/help": """
 Можно скопировать или перенести файл и все его подфайлы в другое место.
 Рассматриваются 3 вида ссылок в obsidian:

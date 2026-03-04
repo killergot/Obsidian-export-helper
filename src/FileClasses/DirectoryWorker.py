@@ -6,12 +6,12 @@ log = logging.getLogger(__name__)
 
 
 class DirectoryWorker:
-    directory_stack = []
+    directory_stack: list[Path] = []
 
     @classmethod
     def pushd(cls, path: str | Path):
         # Сохраняем текущую директорию в стек
-        cls.directory_stack.append(os.getcwd())
+        cls.directory_stack.append(Path(os.getcwd()))
         # Переходим в новую директорию
         os.chdir(path)
         log.debug(f"Перешли в директорию: {os.getcwd()}")

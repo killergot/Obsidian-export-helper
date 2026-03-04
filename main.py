@@ -42,7 +42,7 @@ if __name__ == "__main__":
     DirectoryWorker.pushd(main_path)
     assert Path.cwd() == main_path, LEXICON_RU["not_set_main_path"]
 
-    links = searcher.searchIn(Path(args.source_file))
+    links = searcher.search_in(Path(args.source_file))
 
     log = logging.getLogger(__name__)
 

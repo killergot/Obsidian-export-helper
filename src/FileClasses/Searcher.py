@@ -48,8 +48,8 @@ class SearcherAllFiles:
         ".dll",  # Библиотеки динамической компоновки
     )
 
-    def searchIn(
-        self, file_path: Path, main_path: str | Path | None = None
+    def search_in(
+        self, file_path: Path, main_path: Path | None = None
     ) -> set[str]:
         """
         Главная функция для поиска всех подфайлов
@@ -57,7 +57,7 @@ class SearcherAllFiles:
         :param main_path: Путь к главной папке
         :return:
         """
-        res = set()
+        res: set[str] = set()
         if main_path is None:
             self.main_file_path = file_path.parent
         else:
@@ -67,6 +67,7 @@ class SearcherAllFiles:
         log.debug(f"{file_path = }")
         res.add(file_path.name)
         return res
+
 
     def read_file(self, path: str) -> str | None:
         """Функция для чтение информации из файла"""
@@ -81,7 +82,7 @@ class SearcherAllFiles:
         :param links: Список файлов с неполными путями
         :return: Список файлов с полными путями
         """
-        return list(filter(lambda x: x, [self.set_exist_file(i) for i in links]))
+        return list(filter(None, [self.set_exist_file(i) for i in links]))
 
     def set_exist_file(self, test: str) -> str | None:
         """Проверка того, существует ли файл"""

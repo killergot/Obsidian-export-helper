@@ -18,7 +18,6 @@ class ColorFormatter(logging.Formatter):
         record.levelname = f"{color}{record.levelname}{self.RESET}"
         record.name = f"\x1b[38;5;81m{record.name}{self.RESET}"
         record.filename = f"\x1b[38;5;110m{record.filename}{self.RESET}"
-        record.lineno = f"\x1b[38;5;246m{record.lineno}{self.RESET}"
 
         return super().format(record)
 
