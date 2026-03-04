@@ -1,5 +1,6 @@
 import pytest
-from src.FileClasses.Searcher import SearcherAllFiles # <-- импорт из твоего файла
+
+from src.FileClasses.Searcher import SearcherAllFiles
 
 
 class TestLinkFinder:
@@ -14,6 +15,7 @@ class TestLinkFinder:
                 """Твоя реализация обработки путей."""
                 # Здесь твоя логика
                 return links
+
         return TestSearcher()
 
     # --- Wikilinks [[...]] ---

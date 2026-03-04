@@ -4,17 +4,18 @@ class EditerListFiles:
     - Удаление файлов
     - Добавление файлов
     """
-    def __init__(self, filesList : set[str]) -> None:
+
+    def __init__(self, filesList: set[str]) -> None:
         self.filesList = filesList
 
-    def doDeleteFile(self,file_name) -> None:
+    def doDeleteFile(self, file_name) -> None:
         if file_name in self.filesList:
             self.filesList.remove(file_name)
 
-    def doAddFile(self,file_name) -> None:
+    def doAddFile(self, file_name) -> None:
         self.filesList.add(file_name)
 
-    def useBlackList(self,black_list) -> None:
+    def useBlackList(self, black_list) -> None:
         """
         Функция для удаления из нашего списка всех файлов, которые входят в черный список.
         :param black_list: Наш черный список

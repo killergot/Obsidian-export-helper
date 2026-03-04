@@ -1,6 +1,6 @@
-import shutil
-import os
 import logging
+import os
+import shutil
 from pathlib import Path
 
 from src.FileClasses.decor import except_catch
@@ -21,17 +21,21 @@ class FileSetter:
         :param dst_path: Целевая папка
         """
         path = Path(src_path)
-        if path.parent != Path('.'):
-            log.debug(f'Создается {path.parent}')
+        if path.parent != Path("."):
+            log.debug(f"Создается {path.parent}")
             (Path(dst_path) / path.parent).mkdir(parents=True, exist_ok=True)
         return str(Path(dst_path) / path)
 
     @classmethod
     @except_catch
-    def file_transfer(cls, file_list: set[str],
-                      dst_path: str, *,
-                      del_flag: bool = False,
-                      folder_flag: bool = False) -> None:
+    def file_transfer(
+        cls,
+        file_list: set[str],
+        dst_path: str,
+        *,
+        del_flag: bool = False,
+        folder_flag: bool = False,
+    ) -> None:
         """
         Переносит все файлы из одного места в другое
         :param file_list: Список всех файлов
@@ -42,11 +46,11 @@ class FileSetter:
         """
 
         if not os.path.exists(dst_path) and not os.path.isfile(dst_path):
-            log.info('Папки назначения не существует, создайте её\n')
+            log.info("Папки назначения не существует, создайте её\n")
             return
 
         for i in file_list:
-            new_dst_path : str = dst_path
+            new_dst_path: str = dst_path
             if folder_flag:
                 new_dst_path = cls.new_make_dirs(i, dst_path)
 
@@ -55,4 +59,4 @@ class FileSetter:
             else:
                 shutil.move(i, new_dst_path)
 
-        log.info('Complete')
+        log.info("Complete")

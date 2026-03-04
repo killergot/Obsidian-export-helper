@@ -6,11 +6,11 @@ class ColorFormatter(logging.Formatter):
     RESET = "\x1b[0m"
 
     COLORS = {
-        logging.DEBUG: "\x1b[38;5;245m",     # серый
-        logging.INFO: "\x1b[38;5;39m",       # синий
-        logging.WARNING: "\x1b[38;5;214m",   # оранжевый
-        logging.ERROR: "\x1b[38;5;196m",     # красный
-        logging.CRITICAL: "\x1b[1;38;5;196m" # жирный красный
+        logging.DEBUG: "\x1b[38;5;245m",  # серый
+        logging.INFO: "\x1b[38;5;39m",  # синий
+        logging.WARNING: "\x1b[38;5;214m",  # оранжевый
+        logging.ERROR: "\x1b[38;5;196m",  # красный
+        logging.CRITICAL: "\x1b[1;38;5;196m",  # жирный красный
     }
 
     def format(self, record: logging.LogRecord) -> str:
@@ -43,17 +43,12 @@ def init_log(level: int):
     # ===== FILE =====
     file_handler = logging.FileHandler("app.log")
     file_handler.setLevel(level)
-    file_handler.setFormatter(
-        logging.Formatter(file_format)
-    )
+    file_handler.setFormatter(logging.Formatter(file_format))
 
     # ===== CONSOLE =====
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(level)
-    console_handler.setFormatter(
-        ColorFormatter(console_format)
-    )
+    console_handler.setFormatter(ColorFormatter(console_format))
 
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
-

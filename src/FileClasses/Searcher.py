@@ -1,54 +1,56 @@
+import logging
 import os
 import re
 from pathlib import Path
-from typing import Optional
 from urllib.parse import unquote
 
 from src.FileClasses.decor import except_catch
-from src.FileClasses.DirectoryWorker import DirectoryWorker
-import logging
 
 log = logging.getLogger(__name__)
 
+
 class SearcherAllFiles:
     """Класс для поиска всех подфайлов"""
+
     file_extensions: tuple[str, ...] = (
-        '.txt',  # Текстовые файлы
-        '.md',  # md-файлы
-        '.pdf',  # PDF-файлы
-        '.doc',  # Microsoft Word документы
-        '.docx',  # Microsoft Word документы (новый формат)
-        '.xls',  # Microsoft Excel файлы
-        '.xlsx',  # Microsoft Excel файлы (новый формат)
-        '.ppt',  # Microsoft PowerPoint файлы
-        '.pptx',  # Microsoft PowerPoint файлы (новый формат)
-        '.csv',  # CSV (Comma Separated Values) файлы
-        '.jpg',  # JPEG изображения
-        '.jpeg',  # JPEG изображения
-        '.png',  # PNG изображения
-        '.gif',  # GIF изображения
-        '.bmp',  # BMP изображения
-        '.zip',  # ZIP архивы
-        '.7z',
-        '.tar',
-        '.tar.gz',
-        '.rar',  # RAR архивы
-        '.exe',  # Исполняемые файлы
-        '.bat',  # Пакетные файлы
-        '.html',  # HTML файлы
-        '.css',  # CSS файлы
-        '.js',  # JavaScript файлы
-        '.json',  # JSON файлы
-        '.xml',  # XML файлы
-        '.mp3',  # MP3 аудиофайлы
-        '.wav',  # WAV аудиофайлы
-        '.mp4',  # MP4 видеофайлы
-        '.avi',  # AVI видеофайлы
-        '.mkv',  # MKV видеофайлы
-        '.dll',  # Библиотеки динамической компоновки
+        ".txt",  # Текстовые файлы
+        ".md",  # md-файлы
+        ".pdf",  # PDF-файлы
+        ".doc",  # Microsoft Word документы
+        ".docx",  # Microsoft Word документы (новый формат)
+        ".xls",  # Microsoft Excel файлы
+        ".xlsx",  # Microsoft Excel файлы (новый формат)
+        ".ppt",  # Microsoft PowerPoint файлы
+        ".pptx",  # Microsoft PowerPoint файлы (новый формат)
+        ".csv",  # CSV (Comma Separated Values) файлы
+        ".jpg",  # JPEG изображения
+        ".jpeg",  # JPEG изображения
+        ".png",  # PNG изображения
+        ".gif",  # GIF изображения
+        ".bmp",  # BMP изображения
+        ".zip",  # ZIP архивы
+        ".7z",
+        ".tar",
+        ".tar.gz",
+        ".rar",  # RAR архивы
+        ".exe",  # Исполняемые файлы
+        ".bat",  # Пакетные файлы
+        ".html",  # HTML файлы
+        ".css",  # CSS файлы
+        ".js",  # JavaScript файлы
+        ".json",  # JSON файлы
+        ".xml",  # XML файлы
+        ".mp3",  # MP3 аудиофайлы
+        ".wav",  # WAV аудиофайлы
+        ".mp4",  # MP4 видеофайлы
+        ".avi",  # AVI видеофайлы
+        ".mkv",  # MKV видеофайлы
+        ".dll",  # Библиотеки динамической компоновки
     )
 
-    def searchIn(self,file_path: Path, main_path : Optional[str|Path]= None) -> set[str]:
+    def searchIn(
+        self, file_path: Path, main_path: str | Path | None = None
+    ) -> set[str]:
         """
         Главная функция для поиска всех подфайлов
         :param file_path: пусть к главному файлу
@@ -60,35 +62,37 @@ class SearcherAllFiles:
             self.main_file_path = file_path.parent
         else:
             self.main_file_path = main_path
-        log.debug(f'Главный путь для поиска: {self.main_file_path}')
+        log.debug(f"Главный путь для поиска: {self.main_file_path}")
         self.rec_find_links(file_path, res)
-        log.debug(f'{file_path = }')
+        log.debug(f"{file_path = }")
         res.add(file_path.name)
         return res
 
-    def read_file(self, path : str) -> str | None:
+    def read_file(self, path: str) -> str | None:
         """Функция для чтение информации из файла"""
-        with open(path,'r',encoding="utf-8") as file:
-            content : str = file.read()
+        with open(path, encoding="utf-8") as file:
+            content: str = file.read()
             return content
 
-    def refactor_path_files(self, links : list[str]) -> list[str] :
+    def refactor_path_files(self, links: list[str]) -> list[str]:
         """
         Меняет все названия файлов на полные с расширением
         Также удаляет из списка несуществующие файлы
         :param links: Список файлов с неполными путями
         :return: Список файлов с полными путями
         """
-        return list(filter(lambda x:x,[self.set_exist_file(i) for i in links]))
+        return list(filter(lambda x: x, [self.set_exist_file(i) for i in links]))
 
-    def set_exist_file(self, test : str) -> str | None:
+    def set_exist_file(self, test: str) -> str | None:
         """Проверка того, существует ли файл"""
         if not test.endswith(self.file_extensions):
-            test += '.md'
+            test += ".md"
         if os.path.exists(test):
             return test
         for root, _, _ in os.walk(self.main_file_path):
-            if root.rfind('.git') == -1 and root.rfind('.obsidian') == -1:  # убираем проверку технических папок
+            if (
+                root.rfind(".git") == -1 and root.rfind(".obsidian") == -1
+            ):  # убираем проверку технических папок
                 temp = Path(root).joinpath(test)
                 if temp.exists():
                     log.debug(temp.relative_to(self.main_file_path))
@@ -112,33 +116,31 @@ class SearcherAllFiles:
 
         patterns: dict[str, re.Pattern] = {
             # [[filename]] или [[filename|display]] или [[filename#section|display]]
-            'wikilink [[...]]': re.compile(
-                r'''
+            "wikilink [[...]]": re.compile(
+                r"""
                 \[\[
                     (?P<link>[^\]\|#\n]+)   # имя файла (без |, #, ], переноса)
                     (?:\#[^\]\|\n]*)?       # опциональная секция #section
                     (?:\|[^\]\n]*)?         # опциональное отображаемое имя |display
                 \]\]
-                ''',
-                re.VERBOSE | re.IGNORECASE
+                """,
+                re.VERBOSE | re.IGNORECASE,
             ),
-
             # [text](<link with spaces>)
-            'markdown link <...>': re.compile(
-                r'''
+            "markdown link <...>": re.compile(
+                r"""
                 \[
                     [^\]\n]*                # текст ссылки
                 \]
                 \(
                     <(?P<link>[^>\n]+)>     # ссылка в угловых скобках
                 \)
-                ''',
-                re.VERBOSE | re.IGNORECASE
+                """,
+                re.VERBOSE | re.IGNORECASE,
             ),
-
             # [text](link#section) - стандартная markdown ссылка
-            'markdown link (...)': re.compile(
-                r'''
+            "markdown link (...)": re.compile(
+                r"""
                 \[
                     [^\]\n]*                # текст ссылки  
                 \]
@@ -148,13 +150,12 @@ class SearcherAllFiles:
                         (?:\#[^\s()]*)?     # опциональный якорь #section
                     )
                 \)
-                ''',
-                re.VERBOSE | re.IGNORECASE
+                """,
+                re.VERBOSE | re.IGNORECASE,
             ),
-
             # [text](file%20name.md) - URL-encoded пробелы
-            'markdown link with %20': re.compile(
-                r'''
+            "markdown link with %20": re.compile(
+                r"""
                 \[
                     [^\]\n]*                # текст ссылки
                 \]
@@ -165,8 +166,8 @@ class SearcherAllFiles:
                         [^()\n<>]*          # остаток пути
                     )
                 \)
-                ''',
-                re.VERBOSE | re.IGNORECASE
+                """,
+                re.VERBOSE | re.IGNORECASE,
             ),
         }
 
@@ -174,7 +175,7 @@ class SearcherAllFiles:
 
         for description, pattern in patterns.items():
             for match in pattern.finditer(file):
-                link = match.group('link')
+                link = match.group("link")
                 if link and link not in results:
                     # Декодируем %20 в пробелы если нужно
                     decoded_link = unquote(link)
@@ -182,29 +183,31 @@ class SearcherAllFiles:
                         results.append(decoded_link)
 
         # Обработка найденных ссылок в файле
-        log.debug(f'Все найденные ссылки: {results}')
+        log.debug(f"Все найденные ссылки: {results}")
         refactor_results = self.refactor_path_files(results)
         if refactor_results:
-            log.info(f'Обработанные найденные ссылки: {refactor_results}')
+            log.info(f"Обработанные найденные ссылки: {refactor_results}")
 
         return refactor_results
 
     @except_catch
-    def rec_find_links(self,file_path: str, links: set[str]) -> None:
-        '''
+    def rec_find_links(self, file_path: str, links: set[str]) -> None:
+        """
         Recursive search linsks in files
         - MB we need add 1 more param for bloc deep recursion
         :param file_path:
         :param links:
         :return:
-        '''
+        """
         content: str | None = self.read_file(file_path)
         if content is None:
-            log.error(file_path + ' wrong in name file')
+            log.error(file_path + " wrong in name file")
             exit(1)
-        old_links = set(links)  # костыль для пересечения в цикл, чтб не попасть в рекурсию
+        old_links = set(
+            links
+        )  # костыль для пересечения в цикл, чтб не попасть в рекурсию
         new_links = set(self.find_all_links(content))
         links |= new_links
         for i in new_links.difference(old_links):
-            if i.endswith('.md'):
+            if i.endswith(".md"):
                 self.rec_find_links(i, links)
