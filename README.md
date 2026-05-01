@@ -1,28 +1,17 @@
-﻿
-# Obsidian export helper
-## Как использовать
-### Базовый запуск
-Скачайте архив для своей ОС из GitHub Releases, распакуйте и запустите бинарник:
+﻿# Obsidian export helper
 
-```powershell
-.\obsidian-export-helper.exe <source_file>
-```
+Утилита для экспорта заметки Obsidian вместе со связанными файлами: вложенными заметками, markdown-ссылками, wikilink-ссылками и изображениями. Подходит, когда нужно быстро собрать отдельный кусок vault в переносимую папку.
 
-```cmd
-obsidian-export-helper.exe <source_file>
-```
+## Демонстрация
 
-Для Linux/macOS:
+![Демонстрация экспорта Obsidian vault](assets/demo.gif)
 
-```bash
-chmod +x ./obsidian-export-helper
-./obsidian-export-helper <source_file>
-```
+На демонстрации показан типичный сценарий:
 
-По умолчанию файлы копируются в папку `output/` рядом с бинарником.
-
-- `<source_file>` — путь к исходной заметке Obsidian (`.md`), из которой будут найдены и собраны связанные файлы.
-    - Без `--vault_path` корнем vault считается папка, в которой лежит `source_file`.
+- открывается исходный файл в оригинальном Obsidian vault;
+- видны подссылки и изображение, на которые ссылается заметка;
+- запускается `obsidian-export-helper`;
+- открывается экспортированный vault, где собраны исходная заметка и связанные файлы.
 
 ### Дополнительные флаги
 ```powershell
@@ -120,3 +109,4 @@ git push origin v0.1.0
 - `[text](link#section)`
 - `[text](<link with spaces>)`
 - `[text](file%20name.md)`
+
