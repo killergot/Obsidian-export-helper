@@ -1,0 +1,88 @@
+name: Release binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.asset_name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            asset_name: obsidian-export-helper-windows-x64
+            executable_name: obsidian-export-helper.exe
+          - os: ubuntu-latest
+            asset_name: obsidian-export-helper-linux-x64
+            executable_name: obsidian-export-helper
+          - os: macos-15-intel
+            asset_name: obsidian-export-helper-macos-x64
+            executable_name: obsidian-export-helper
+          - os: macos-latest
+            asset_name: obsidian-export-helper-macos-arm64
+            executable_name: obsidian-export-helper
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: |
+            test_requirements.txt
+            requirements-build.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r test_requirements.txt -r requirements-build.txt
+
+      - name: Run tests
+        run: python -m pytest
+
+      - name: Build binary
+        run: pyinstaller --clean --noconfirm obsidian-export-helper.spec
+
+      - name: Package artifact
+        env:
+          ASSET_NAME: ${{ matrix.asset_name }}
+          EXECUTABLE_NAME: ${{ matrix.executable_name }}
+        run: |
+          python -c "import os, shutil; from pathlib import Path; asset=os.environ['ASSET_NAME']; exe=os.environ['EXECUTABLE_NAME']; package_dir=Path('release')/asset; package_dir.mkdir(parents=True, exist_ok=True); shutil.copy2(Path('dist')/exe, package_dir/exe); shutil.copy2('README.md', package_dir/'README.md'); shutil.make_archive(str(Path('release')/asset), 'zip', root_dir=package_dir)"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: release/${{ matrix.asset_name }}.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG_NAME" >/dev/null 2>&1 || gh release create "$TAG_NAME" --title "$TAG_NAME" --generate-notes
+          gh release upload "$TAG_NAME" release-assets/*.zip --clobber

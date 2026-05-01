@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 from pathlib import Path
+import sys
 
 from src.FileClasses.DirectoryWorker import DirectoryWorker
 from src.FileClasses.FileSetter import FileSetter
@@ -9,13 +10,19 @@ from src.FileClasses.Searcher import SearcherAllFiles
 from src.lexicon.lexicon import LEXICON_RU
 from src.logger.logger import init_log
 
-if __name__ == "__main__":
-    os.makedirs("./output", exist_ok=True)
+
+def get_app_dir() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent
+
+
+def main() -> None:
     parser = argparse.ArgumentParser(description=LEXICON_RU["/help"])
     parser.add_argument("source_file", help=LEXICON_RU["source_file"])
 
-    # folder in this project
-    default_output = Path(__file__).resolve().parent.joinpath("output")
+    default_output = get_app_dir().joinpath("output")
+    default_output.mkdir(parents=True, exist_ok=True)
 
     parser.add_argument(
         "-o", "--output", help=LEXICON_RU["--output"], default=default_output
@@ -53,3 +60,7 @@ if __name__ == "__main__":
     )
     DirectoryWorker.popd()
     print(LEXICON_RU["OK"])
+
+
+if __name__ == "__main__":
+    main()
