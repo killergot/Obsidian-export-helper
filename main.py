@@ -1,8 +1,8 @@
 import argparse
 import logging
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 
 from src.FileClasses.DirectoryWorker import DirectoryWorker
 from src.FileClasses.FileSetter import FileSetter
@@ -17,7 +17,16 @@ def get_app_dir() -> Path:
     return Path(__file__).resolve().parent
 
 
+def configure_stdio() -> None:
+    for stream_name in ("stdout", "stderr"):
+        stream = getattr(sys, stream_name)
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+
 def main() -> None:
+    configure_stdio()
+
     parser = argparse.ArgumentParser(description=LEXICON_RU["/help"])
     parser.add_argument("source_file", help=LEXICON_RU["source_file"])
 
@@ -39,17 +48,23 @@ def main() -> None:
         init_log(logging.INFO)
 
     searcher = SearcherAllFiles()
+    source_file = Path(args.source_file).resolve()
 
     if args.main_path is None:
-        main_path = Path(args.source_file).resolve().parent
+        main_path = source_file.parent
     else:
-        main_path = Path(args.main_path)
+        main_path = Path(args.main_path).resolve()
 
     assert main_path.is_dir(), LEXICON_RU["main_path_not_dir"]
     DirectoryWorker.pushd(main_path)
     assert Path.cwd() == main_path, LEXICON_RU["not_set_main_path"]
 
-    links = searcher.search_in(Path(args.source_file))
+    try:
+        source_file_for_search = source_file.relative_to(main_path)
+    except ValueError:
+        source_file_for_search = source_file
+
+    links = searcher.search_in(source_file_for_search, main_path=main_path)
 
     log = logging.getLogger(__name__)
 

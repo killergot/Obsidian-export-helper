@@ -20,7 +20,18 @@ def _create_vault(tmp_path: Path) -> tuple[Path, Path]:
 
 def _run_main(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
     cmd = [sys.executable, "main.py", *args]
-    return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=True)
+    result = subprocess.run(
+        cmd,
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    assert result.returncode == 0, (
+        f"Command failed: {cmd}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+    )
+    return result
 
 
 def test_default_main_path_uses_source_parent(tmp_path: Path) -> None:

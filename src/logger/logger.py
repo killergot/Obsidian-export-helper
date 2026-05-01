@@ -40,7 +40,7 @@ def init_log(level: int):
     )
 
     # ===== FILE =====
-    file_handler = logging.FileHandler("app.log")
+    file_handler = logging.FileHandler("app.log", encoding="utf-8", errors="replace")
     file_handler.setLevel(level)
     file_handler.setFormatter(logging.Formatter(file_format))
 
