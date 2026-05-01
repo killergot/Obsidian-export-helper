@@ -22,19 +22,31 @@ chmod +x ./obsidian-export-helper
 По умолчанию файлы копируются в папку `output/` рядом с бинарником.
 
 - `<source_file>` - путь к исходной заметке Obsidian (`.md`), из которой будут найдены и собраны связанные файлы.
+- Если указать `<source_file>` без расширения, например `учеба`, утилита попробует найти `учеба.md`.
 - Без `--vault_path` корнем vault считается папка, в которой лежит `source_file`.
 
 ## Дополнительные флаги
 
 ```powershell
-.\obsidian-export-helper.exe <source_file> [--output <path>] [--delete] [--folder] [--verbose] [--vault_path <path>]
+.\obsidian-export-helper.exe <source_file> [--vault_path <path>] [--output <path>] [--delete] [--folder] [--report] [--verbose]
 ```
 
+- `--vault_path` - корневая папка Obsidian vault. Если не задана, используется папка `source_file`. Если задана, `source_file` должен находиться внутри этой папки.
 - `--output`, `-o` - путь назначения для файлов. Если папки нет, она будет создана.
 - `--delete` - перемещать файлы, то есть удалять их из исходного места после переноса.
 - `--folder` - сохранять структуру папок относительно корня Obsidian vault.
+- `--report` - создать markdown-отчёт `export-report-{filename}.md` в папке вывода.
 - `--verbose` - подробные логи.
-- `--vault_path` - корневая папка Obsidian vault. Если не задана, используется папка `source_file`.
+
+После успешного экспорта в консоль выводится summary:
+
+```text
+Export complete:
+- notes: 12
+- images: 4
+- missing links: 2
+- output: D:\Export
+```
 
 ## Примеры
 
@@ -61,6 +73,20 @@ chmod +x ./obsidian-export-helper
 ```powershell
 .\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault_path "D:\Vault"
 ```
+
+Создать отчёт по экспорту:
+
+```powershell
+.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault_path "D:\Vault" -o "D:\Export" --report
+```
+
+Отчёт `export-report-index.md` содержит:
+
+- основные параметры запуска;
+- статистику по заметкам, изображениям и отсутствующим ссылкам;
+- список скопированных или перемещённых файлов;
+- список пропущенных файлов и missing links;
+- соответствия найденных ссылок реальным файлам.
 
 ## Что экспортируется
 
