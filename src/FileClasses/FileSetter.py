@@ -1,8 +1,20 @@
 import logging
 import shutil
+from dataclasses import dataclass, field
 from pathlib import Path
 
 log = logging.getLogger(__name__)
+
+
+@dataclass
+class TransferResult:
+    copied_files: list[str] = field(default_factory=list)
+    moved_files: list[str] = field(default_factory=list)
+    skipped_files: list[str] = field(default_factory=list)
+
+    @property
+    def transferred_files(self) -> list[str]:
+        return self.copied_files + self.moved_files
 
 
 class FileSetter:
@@ -24,18 +36,28 @@ class FileSetter:
         *,
         del_flag: bool = False,
         folder_flag: bool = False,
-    ) -> None:
+    ) -> TransferResult:
+        result = TransferResult()
         dst = Path(dst_path)
         dst.mkdir(parents=True, exist_ok=True)
 
-        for file_name in file_list:
+        for file_name in sorted(file_list):
+            if not Path(file_name).exists():
+                message = f"{file_name} (source file is missing during transfer)"
+                log.warning("Skipping %s", message)
+                result.skipped_files.append(message)
+                continue
+
             new_dst_path: str | Path = dst
             if folder_flag:
                 new_dst_path = cls.new_make_dirs(file_name, str(dst))
 
             if not del_flag:
                 shutil.copy2(file_name, new_dst_path)
+                result.copied_files.append(file_name)
             else:
                 shutil.move(file_name, new_dst_path)
+                result.moved_files.append(file_name)
 
         log.info("Complete")
+        return result

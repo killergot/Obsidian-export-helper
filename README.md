@@ -1,5 +1,6 @@
 ﻿# Obsidian export helper
 
+Export one Obsidian note with all linked notes and assets into a portable folder.  
 Утилита для экспорта заметки Obsidian вместе со связанными файлами: вложенными заметками, markdown-ссылками, wikilink-ссылками и изображениями. Подходит, когда нужно быстро собрать отдельный кусок vault в переносимую папку.
 
 ## Демонстрация

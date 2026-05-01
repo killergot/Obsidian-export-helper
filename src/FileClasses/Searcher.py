@@ -12,6 +12,11 @@ log = logging.getLogger(__name__)
 class SearcherAllFiles:
     """Класс для поиска всех подфайлов"""
 
+    def __init__(self) -> None:
+        self.main_file_path: Path | None = None
+        self.missing_links: list[str] = []
+        self.resolved_links: dict[str, str] = {}
+
     file_extensions: tuple[str, ...] = (
         ".txt",  # Текстовые файлы
         ".md",  # md-файлы
@@ -82,7 +87,19 @@ class SearcherAllFiles:
         :param links: Список файлов с неполными путями
         :return: Список файлов с полными путями
         """
-        return list(filter(None, [self.set_exist_file(i) for i in links]))
+        result: list[str] = []
+        for link in links:
+            existing_file = self.set_exist_file(link)
+            if existing_file is None:
+                if link not in self.missing_links:
+                    self.missing_links.append(link)
+                log.warning("Link found, but target file is missing: %s", link)
+                continue
+
+            self.resolved_links[link] = existing_file
+            result.append(existing_file)
+
+        return result
 
     @staticmethod
     def normalize_link(link: str) -> str:
