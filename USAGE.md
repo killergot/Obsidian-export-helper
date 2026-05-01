@@ -35,7 +35,7 @@ chmod +x ./obsidian-export-helper
 - `--output`, `-o` - путь назначения для файлов. Если папки нет, она будет создана.
 - `--delete` - перемещать файлы, то есть удалять их из исходного места после переноса.
 - `--folder` - сохранять структуру папок относительно корня Obsidian vault.
-- `--report` - создать markdown-отчёт `export-report-{filename}.md` в папке вывода.
+- `--report` - создать markdown-отчёт `export-report-{filename}.md` рядом с бинарником, а при запуске из исходников - рядом с `main.py`.
 - `--verbose` - подробные логи.
 
 После успешного экспорта в консоль выводится summary:
@@ -80,7 +80,7 @@ Export complete:
 .\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault_path "D:\Vault" -o "D:\Export" --report
 ```
 
-Отчёт `export-report-index.md` содержит:
+Отчёт `export-report-index.md` создаётся рядом с бинарником или `main.py` и содержит:
 
 - основные параметры запуска;
 - статистику по заметкам, изображениям и отсутствующим ссылкам;

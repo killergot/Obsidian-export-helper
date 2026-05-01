@@ -229,7 +229,7 @@ def test_vault_path_must_contain_source_file(tmp_path: Path) -> None:
 def test_report_includes_summary_and_missing_links(tmp_path: Path) -> None:
     vault = tmp_path / "vault"
     vault.mkdir()
-    source_file = vault / "index.md"
+    source_file = vault / "report-source.md"
     source_file.write_text(
         "See [missing](missing.md)\n![image](image.png)\n",
         encoding="utf-8",
@@ -238,26 +238,34 @@ def test_report_includes_summary_and_missing_links(tmp_path: Path) -> None:
     output_dir = tmp_path / "out"
 
     repo_root = Path(__file__).resolve().parents[1]
-    result = _run_main(
-        [
-            str(source_file),
-            "-o",
-            str(output_dir),
-            "--vault_path",
-            str(vault),
-            "--report",
-        ],
-        cwd=repo_root,
-    )
+    report_file = repo_root / "export-report-report-source.md"
+    if report_file.exists():
+        report_file.unlink()
 
-    report_file = output_dir / "export-report-index.md"
-    report = report_file.read_text(encoding="utf-8")
+    try:
+        result = _run_main(
+            [
+                str(source_file),
+                "-o",
+                str(output_dir),
+                "--vault_path",
+                str(vault),
+                "--report",
+            ],
+            cwd=repo_root,
+        )
 
-    assert (output_dir / "index.md").exists()
-    assert (output_dir / "image.png").exists()
-    assert report_file.exists()
-    assert "- notes: 1" in result.stdout
-    assert "- images: 1" in result.stdout
-    assert "- missing links: 1" in result.stdout
-    assert "missing.md (linked target is missing)" in report
-    assert "image.png" in report
+        report = report_file.read_text(encoding="utf-8")
+
+        assert (output_dir / "report-source.md").exists()
+        assert (output_dir / "image.png").exists()
+        assert report_file.exists()
+        assert (output_dir / "export-report-report-source.md").exists() is False
+        assert "- notes: 1" in result.stdout
+        assert "- images: 1" in result.stdout
+        assert "- missing links: 1" in result.stdout
+        assert "missing.md (linked target is missing)" in report
+        assert "image.png" in report
+    finally:
+        if report_file.exists():
+            report_file.unlink()

@@ -87,12 +87,13 @@ def print_summary(
     print(f"- output: {output_path}")
 
 
-def report_path_for(output_path: Path, source_file: Path) -> Path:
-    return output_path / f"export-report-{source_file.stem}.md"
+def report_path_for(app_dir: Path, source_file: Path) -> Path:
+    return app_dir / f"export-report-{source_file.stem}.md"
 
 
 def write_report(
     *,
+    app_dir: Path,
     output_path: Path,
     source_file: Path,
     source_file_for_search: Path,
@@ -103,7 +104,7 @@ def write_report(
     delete: bool,
     folder: bool,
 ) -> Path:
-    report_path = report_path_for(output_path, source_file)
+    report_path = report_path_for(app_dir, source_file)
     transferred_files = transfer_result.transferred_files
     notes = sum(1 for file_name in transferred_files if Path(file_name).suffix == ".md")
     images = sum(
@@ -182,7 +183,7 @@ def main() -> None:
     parser.add_argument("--vault_path", help=LEXICON_RU["--vault_path"], default=None)
     parser.add_argument(
         "--report",
-        help="Generate export-report-{filename}.md in the output directory.",
+        help="Generate export-report-{filename}.md next to the binary or main.py.",
         action="store_true",
     )
     args = parser.parse_args()
@@ -226,6 +227,7 @@ def main() -> None:
 
     if args.report:
         report_path = write_report(
+            app_dir=get_app_dir(),
             output_path=output_path,
             source_file=source_file,
             source_file_for_search=source_file_for_search,
