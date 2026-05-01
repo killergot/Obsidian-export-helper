@@ -34,10 +34,9 @@ def _run_main(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
     return result
 
 
-def test_default_main_path_uses_source_parent(tmp_path: Path) -> None:
+def test_default_vault_path_uses_source_parent(tmp_path: Path) -> None:
     vault, source_file = _create_vault(tmp_path)
     output_dir = tmp_path / "out"
-    output_dir.mkdir()
 
     repo_root = Path(__file__).resolve().parents[1]
     _run_main([str(source_file), "-o", str(output_dir)], cwd=repo_root)
@@ -85,17 +84,61 @@ def test_delete_flag_moves_files(tmp_path: Path) -> None:
     assert (vault / "attach.txt").exists() is False
 
 
-def test_explicit_main_path_flag(tmp_path: Path) -> None:
+def test_explicit_vault_path_flag(tmp_path: Path) -> None:
     vault, source_file = _create_vault(tmp_path)
     output_dir = tmp_path / "out"
     output_dir.mkdir()
 
     repo_root = Path(__file__).resolve().parents[1]
     _run_main(
-        [str(source_file), "-o", str(output_dir), "--main_path", str(vault)],
+        [str(source_file), "-o", str(output_dir), "--vault_path", str(vault)],
         cwd=repo_root,
     )
 
     assert (output_dir / "note1.md").exists()
     assert (output_dir / "note2.md").exists()
     assert (output_dir / "attach.txt").exists()
+
+
+def test_vault_path_keeps_source_relative_path_with_folder(tmp_path: Path) -> None:
+    vault = tmp_path / "vault"
+    notes = vault / "Notes"
+    notes.mkdir(parents=True)
+    source_file = notes / "index.md"
+    source_file.write_text("See [child](child.md)\n", encoding="utf-8")
+    (notes / "child.md").write_text("child", encoding="utf-8")
+    output_dir = tmp_path / "out"
+
+    repo_root = Path(__file__).resolve().parents[1]
+    _run_main(
+        [
+            str(source_file),
+            "-o",
+            str(output_dir),
+            "--folder",
+            "--vault_path",
+            str(vault),
+        ],
+        cwd=repo_root,
+    )
+
+    assert (output_dir / "Notes" / "index.md").exists()
+    assert (output_dir / "Notes" / "child.md").exists()
+
+
+def test_markdown_anchor_links_are_copied(tmp_path: Path) -> None:
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    source_file = vault / "index.md"
+    source_file.write_text("See [child](child.md#section)\n", encoding="utf-8")
+    (vault / "child.md").write_text("child", encoding="utf-8")
+    output_dir = tmp_path / "out"
+
+    repo_root = Path(__file__).resolve().parents[1]
+    _run_main(
+        [str(source_file), "-o", str(output_dir), "--vault_path", str(vault)],
+        cwd=repo_root,
+    )
+
+    assert (output_dir / "index.md").exists()
+    assert (output_dir / "child.md").exists()

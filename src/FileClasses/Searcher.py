@@ -49,23 +49,23 @@ class SearcherAllFiles:
     )
 
     def search_in(
-        self, file_path: Path, main_path: Path | None = None
+        self, file_path: Path, vault_path: Path | None = None
     ) -> set[str]:
         """
         Главная функция для поиска всех подфайлов
         :param file_path: пусть к главному файлу
-        :param main_path: Путь к главной папке
+        :param vault_path: Путь к корневой папке Obsidian vault
         :return:
         """
         res: set[str] = set()
-        if main_path is None:
+        if vault_path is None:
             self.main_file_path = file_path.parent
         else:
-            self.main_file_path = main_path
+            self.main_file_path = vault_path
         log.debug(f"Главный путь для поиска: {self.main_file_path}")
         self.rec_find_links(file_path, res)
         log.debug(f"{file_path = }")
-        res.add(file_path.name)
+        res.add(str(file_path))
         return res
 
 
@@ -83,6 +83,11 @@ class SearcherAllFiles:
         :return: Список файлов с полными путями
         """
         return list(filter(None, [self.set_exist_file(i) for i in links]))
+
+    @staticmethod
+    def normalize_link(link: str) -> str:
+        decoded_link = unquote(link).strip()
+        return decoded_link.split("#", 1)[0]
 
     def set_exist_file(self, test: str) -> str | None:
         """Проверка того, существует ли файл"""
@@ -179,7 +184,9 @@ class SearcherAllFiles:
                 link = match.group("link")
                 if link and link not in results:
                     # Декодируем %20 в пробелы если нужно
-                    decoded_link = unquote(link)
+                    decoded_link = self.normalize_link(link)
+                    if not decoded_link:
+                        continue
                     if decoded_link not in results:
                         results.append(decoded_link)
 

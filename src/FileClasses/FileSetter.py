@@ -1,33 +1,22 @@
 import logging
-import os
 import shutil
 from pathlib import Path
-
-from src.FileClasses.decor import except_catch
 
 log = logging.getLogger(__name__)
 
 
 class FileSetter:
-    """
-    Класс для переноса или копирования файлов из списка текущей рабочей директории куда либо
-    """
+    """Copy or move collected files from the current vault directory."""
 
     @staticmethod
     def new_make_dirs(src_path: str, dst_path: str) -> str:
-        """
-        Функция для создания папок внутри папки назначения
-        :param src_path: Начальный путь файла
-        :param dst_path: Целевая папка
-        """
         path = Path(src_path)
         if path.parent != Path("."):
-            log.debug(f"Создается {path.parent}")
+            log.debug("Creating %s", path.parent)
             (Path(dst_path) / path.parent).mkdir(parents=True, exist_ok=True)
         return str(Path(dst_path) / path)
 
     @classmethod
-    @except_catch
     def file_transfer(
         cls,
         file_list: set[str],
@@ -36,27 +25,17 @@ class FileSetter:
         del_flag: bool = False,
         folder_flag: bool = False,
     ) -> None:
-        """
-        Переносит все файлы из одного места в другое
-        :param file_list: Список всех файлов
-        :param dst_path: Целевая папка
-        :param del_flag: Нужно ли удалять файлы из исходного места
-        :param folder_flag: Нужно ли сохранять сами папки
-        :return:
-        """
+        dst = Path(dst_path)
+        dst.mkdir(parents=True, exist_ok=True)
 
-        if not os.path.exists(dst_path) and not os.path.isfile(dst_path):
-            log.info("Папки назначения не существует, создайте её\n")
-            return
-
-        for i in file_list:
-            new_dst_path: str = dst_path
+        for file_name in file_list:
+            new_dst_path: str | Path = dst
             if folder_flag:
-                new_dst_path = cls.new_make_dirs(i, dst_path)
+                new_dst_path = cls.new_make_dirs(file_name, str(dst))
 
             if not del_flag:
-                shutil.copy2(i, new_dst_path)
+                shutil.copy2(file_name, new_dst_path)
             else:
-                shutil.move(i, new_dst_path)
+                shutil.move(file_name, new_dst_path)
 
         log.info("Complete")

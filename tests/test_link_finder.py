@@ -48,7 +48,7 @@ class TestLinkFinder:
 
     def test_markdown_link_with_section(self, finder):
         text = "Читай [Section name](Example.md#Details)"
-        assert "Example.md#Details" in finder.find_all_links(text)
+        assert "Example.md" in finder.find_all_links(text)
 
     def test_markdown_link_with_path(self, finder):
         text = "Файл [здесь](notes/subfolder/file.md)"

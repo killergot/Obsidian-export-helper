@@ -1,11 +1,15 @@
 ﻿
 # Obsidian export helper
 ## Как использовать
-### Готовый бинарник
-Скачайте архив для своей ОС из GitHub Releases, распакуйте и запустите файл:
+### Базовый запуск
+Скачайте архив для своей ОС из GitHub Releases, распакуйте и запустите бинарник:
 
 ```powershell
 .\obsidian-export-helper.exe <source_file>
+```
+
+```cmd
+obsidian-export-helper.exe <source_file>
 ```
 
 Для Linux/macOS:
@@ -15,34 +19,54 @@ chmod +x ./obsidian-export-helper
 ./obsidian-export-helper <source_file>
 ```
 
-Python пользователю не нужен. По умолчанию файлы копируются в папку `output/` рядом с бинарником.
+По умолчанию файлы копируются в папку `output/` рядом с бинарником.
+
+- `<source_file>` — путь к исходной заметке Obsidian (`.md`), из которой будут найдены и собраны связанные файлы.
+    - Без `--vault_path` корнем vault считается папка, в которой лежит `source_file`.
+
+### Дополнительные флаги
+```powershell
+.\obsidian-export-helper.exe <source_file> [--output <path>] [--delete] [--folder] [--verbose] [--vault_path <path>]
+```
+
+- `--output`, `-o` — путь назначения для файлов. Если папки нет, она будет создана.
+- `--delete` — перемещать файлы (удалять из исходного места) вместо копирования.
+- `--folder` — сохранять структуру папок относительно корня Obsidian.
+- `--verbose` — подробные логи.
+- `--vault_path` — корневая папка Obsidian vault. Если не задана, используется папка `source_file`.
+
+### Примеры
+Скопировать все связанные файлы в папку `output` рядом с бинарником:
+```powershell
+.\obsidian-export-helper.exe "D:\Vault\Notes\index.md"
+```
+
+Сохранить структуру папок в пользовательский каталог:
+```powershell
+.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --folder -o "D:\Export"
+```
+
+Переместить файлы (удалить из исходника):
+```powershell
+.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --delete -o "D:\Export"
+```
+
+Указать корень Obsidian vault явно:
+```powershell
+.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault_path "D:\Vault"
+```
+
+## Разработка
 
 ### Требования
 - Python 3.10+
 
-Нужны только для запуска из исходников или локальной сборки.
-
-### Базовый запуск
+### Запуск из исходников
 ```powershell
 python main.py <source_file>
 ```
-- `<source_file>` — путь к исходной заметке Obsidian (`.md`), из которой будут найдены и собраны связанные файлы.
-    - Данный способ стоит использовать, если source_file лежит в корне вашего obsidian репозитория
-- По умолчанию файлы копируются в `output/` рядом с `main.py`.
 
-### Дополнительные флаги
-```powershell
-python main.py <source_file> [--output <path>] [--delete] [--folder] [--verbose] [--main_path <path>]
-```
-
-- `--output`, `-o` — путь назначения для файлов.
-- `--delete` — перемещать файлы (удалять из исходного места) вместо копирования.
-- `--folder` — сохранять структуру папок относительно корня Obsidian.
-- `--verbose` — подробные логи.
-- `--main_path` — корневая папка Obsidian. Если не задана, берется папка относительно `source_file`.
-
-### Возможные проблемы
-- Не отлажена работа с якорями, если вы их много используете, могут не подтягиваться данные файлы
+По умолчанию файлы копируются в `output/` рядом с `main.py`.
 
 ## Сборка бинарника
 
@@ -69,27 +93,6 @@ Workflow `.github/workflows/release.yml` запускается при push те
 ```bash
 git tag v0.1.0
 git push origin v0.1.0
-```
-
-### Примеры
-Скопировать все связанные файлы в папку `output` рядом с проектом:
-```powershell
-python main.py "D:\Vault\Notes\index.md"
-```
-
-Сохранить структуру папок в пользовательский каталог:
-```powershell
-python main.py "D:\Vault\Notes\index.md" --folder -o "D:\Export"
-```
-
-Переместить файлы (удалить из исходника):
-```powershell
-python main.py "D:\Vault\Notes\index.md" --delete -o "D:\Export"
-```
-
-Указать корень Obsidian явно:
-```powershell
-python main.py "D:\Vault\Notes\index.md" --main_path "D:\Vault"
 ```
 
 ## Архитектура проекта

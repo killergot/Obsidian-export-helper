@@ -1,6 +1,5 @@
 import argparse
 import logging
-import os
 import sys
 from pathlib import Path
 
@@ -39,7 +38,7 @@ def main() -> None:
     parser.add_argument("--delete", help=LEXICON_RU["--delete"], action="store_true")
     parser.add_argument("--folder", help=LEXICON_RU["--folder"], action="store_true")
     parser.add_argument("--verbose", help=LEXICON_RU["--verbose"], action="store_true")
-    parser.add_argument("--main_path", help=LEXICON_RU["--main_path"], default=None)
+    parser.add_argument("--vault_path", help=LEXICON_RU["--vault_path"], default=None)
     args = parser.parse_args()
 
     if args.verbose:
@@ -50,30 +49,36 @@ def main() -> None:
     searcher = SearcherAllFiles()
     source_file = Path(args.source_file).resolve()
 
-    if args.main_path is None:
-        main_path = source_file.parent
+    if args.vault_path is None:
+        vault_path = source_file.parent
     else:
-        main_path = Path(args.main_path).resolve()
+        vault_path = Path(args.vault_path).resolve()
 
-    assert main_path.is_dir(), LEXICON_RU["main_path_not_dir"]
-    DirectoryWorker.pushd(main_path)
-    assert Path.cwd() == main_path, LEXICON_RU["not_set_main_path"]
+    if not vault_path.is_dir():
+        raise NotADirectoryError(LEXICON_RU["vault_path_not_dir"])
+
+    DirectoryWorker.pushd(vault_path)
 
     try:
-        source_file_for_search = source_file.relative_to(main_path)
-    except ValueError:
-        source_file_for_search = source_file
+        if Path.cwd() != vault_path:
+            raise RuntimeError(LEXICON_RU["not_set_vault_path"])
 
-    links = searcher.search_in(source_file_for_search, main_path=main_path)
+        try:
+            source_file_for_search = source_file.relative_to(vault_path)
+        except ValueError:
+            source_file_for_search = source_file
 
-    log = logging.getLogger(__name__)
+        links = searcher.search_in(source_file_for_search, vault_path=vault_path)
 
-    log.debug(default_output)
-    log.debug(links)
-    FileSetter.file_transfer(
-        links, args.output, del_flag=args.delete, folder_flag=args.folder
-    )
-    DirectoryWorker.popd()
+        log = logging.getLogger(__name__)
+
+        log.debug(default_output)
+        log.debug(links)
+        FileSetter.file_transfer(
+            links, args.output, del_flag=args.delete, folder_flag=args.folder
+        )
+    finally:
+        DirectoryWorker.popd()
     print(LEXICON_RU["OK"])
 
 
