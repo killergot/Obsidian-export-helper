@@ -105,7 +105,7 @@ def test_explicit_vault_path_flag(tmp_path: Path) -> None:
 
     repo_root = Path(__file__).resolve().parents[1]
     _run_main(
-        [str(source_file), "-o", str(output_dir), "--vault_path", str(vault)],
+        [str(source_file), "-o", str(output_dir), "--vault-path", str(vault)],
         cwd=repo_root,
     )
 
@@ -130,7 +130,7 @@ def test_vault_path_keeps_source_relative_path_with_folder(tmp_path: Path) -> No
             "-o",
             str(output_dir),
             "--folder",
-            "--vault_path",
+            "--vault-path",
             str(vault),
         ],
         cwd=repo_root,
@@ -150,7 +150,7 @@ def test_markdown_anchor_links_are_copied(tmp_path: Path) -> None:
 
     repo_root = Path(__file__).resolve().parents[1]
     _run_main(
-        [str(source_file), "-o", str(output_dir), "--vault_path", str(vault)],
+        [str(source_file), "-o", str(output_dir), "--vault-path", str(vault)],
         cwd=repo_root,
     )
 
@@ -168,7 +168,7 @@ def test_source_without_suffix_uses_markdown_file(tmp_path: Path) -> None:
             str(source_file.with_suffix("")),
             "-o",
             str(output_dir),
-            "--vault_path",
+            "--vault-path",
             str(vault),
         ],
         cwd=repo_root,
@@ -187,12 +187,12 @@ def test_non_markdown_source_file_has_clear_error(tmp_path: Path) -> None:
 
     repo_root = Path(__file__).resolve().parents[1]
     result = _run_main_allow_fail(
-        [str(source_file), "--vault_path", str(vault)],
+        [str(source_file), "--vault-path", str(vault)],
         cwd=repo_root,
     )
 
     assert result.returncode != 0
-    assert "source_file must be a Markdown file (.md)" in result.stderr
+    assert "source-file must be a Markdown file (.md)" in result.stderr
 
 
 def test_missing_source_file_has_clear_error(tmp_path: Path) -> None:
@@ -201,7 +201,7 @@ def test_missing_source_file_has_clear_error(tmp_path: Path) -> None:
 
     repo_root = Path(__file__).resolve().parents[1]
     result = _run_main_allow_fail(
-        ["missing-note", "--vault_path", str(vault)],
+        ["missing-note", "--vault-path", str(vault)],
         cwd=repo_root,
     )
 
@@ -220,12 +220,12 @@ def test_vault_path_must_contain_source_file(tmp_path: Path) -> None:
 
     repo_root = Path(__file__).resolve().parents[1]
     result = _run_main_allow_fail(
-        [str(source_file), "--vault_path", str(vault)],
+        [str(source_file), "--vault-path", str(vault)],
         cwd=repo_root,
     )
 
     assert result.returncode != 0
-    assert "--vault_path does not contain source_file" in result.stderr
+    assert "--vault-path does not contain source-file" in result.stderr
 
 
 def test_report_includes_summary_and_missing_links(tmp_path: Path) -> None:
@@ -250,7 +250,7 @@ def test_report_includes_summary_and_missing_links(tmp_path: Path) -> None:
                 str(source_file),
                 "-o",
                 str(output_dir),
-                "--vault_path",
+                "--vault-path",
                 str(vault),
                 "--report",
             ],
@@ -293,7 +293,7 @@ def test_default_ignore_file_skips_linked_files(tmp_path: Path) -> None:
     output_dir = tmp_path / "out"
 
     result = _run_main(
-        [str(source_file), "-o", str(output_dir), "--vault_path", str(vault)],
+        [str(source_file), "-o", str(output_dir), "--vault-path", str(vault)],
         cwd=launch_dir,
     )
 
@@ -320,7 +320,7 @@ def test_ignore_file_negation_allows_linked_file(tmp_path: Path) -> None:
     output_dir = tmp_path / "out"
 
     result = _run_main(
-        [str(source_file), "-o", str(output_dir), "--vault_path", str(vault)],
+        [str(source_file), "-o", str(output_dir), "--vault-path", str(vault)],
         cwd=launch_dir,
     )
 
@@ -345,7 +345,7 @@ def test_custom_ignore_file_flag(tmp_path: Path) -> None:
             str(source_file),
             "-o",
             str(output_dir),
-            "--vault_path",
+            "--vault-path",
             str(vault),
             "--ignore-file",
             "custom.ignore",
@@ -368,10 +368,10 @@ def test_ignored_source_file_has_clear_error(tmp_path: Path) -> None:
     (launch_dir / ".obsidian-export-ignore").write_text("index.md\n", encoding="utf-8")
 
     result = _run_main_allow_fail(
-        [str(source_file), "--vault_path", str(vault)],
+        [str(source_file), "--vault-path", str(vault)],
         cwd=launch_dir,
     )
 
     assert result.returncode != 0
-    assert "source_file" in result.stderr
+    assert "source-file" in result.stderr
     assert "список исключений" in result.stderr

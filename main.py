@@ -34,7 +34,7 @@ def source_candidates(source_arg: str) -> list[Path]:
         return [source_path.with_suffix(".md")]
     if source_path.suffix.lower() != ".md":
         raise ValueError(
-            f"source_file must be a Markdown file (.md): {source_arg}. "
+            f"source-file must be a Markdown file (.md): {source_arg}. "
             "If you omit the suffix, the exporter will try '<name>.md'."
         )
     return [source_path]
@@ -65,8 +65,8 @@ def relative_to_vault(source_file: Path, vault_path: Path) -> Path:
         return source_file.relative_to(vault_path)
     except ValueError as exc:
         raise ValueError(
-            f"--vault_path does not contain source_file. "
-            f"source_file: {source_file}; vault_path: {vault_path}"
+            f"--vault-path does not contain source-file. "
+            f"source-file: {source_file}; vault-path: {vault_path}"
         ) from exc
 
 
@@ -201,7 +201,9 @@ def main() -> None:
     configure_stdio()
 
     parser = argparse.ArgumentParser(description=LEXICON_RU["/help"])
-    parser.add_argument("source_file", help=LEXICON_RU["source_file"])
+    parser.add_argument(
+        "source_file", metavar="source-file", help=LEXICON_RU["source_file"]
+    )
 
     default_output = get_app_dir().joinpath("output")
     default_output.mkdir(parents=True, exist_ok=True)
@@ -212,7 +214,8 @@ def main() -> None:
     parser.add_argument("--delete", help=LEXICON_RU["--delete"], action="store_true")
     parser.add_argument("--folder", help=LEXICON_RU["--folder"], action="store_true")
     parser.add_argument("--verbose", help=LEXICON_RU["--verbose"], action="store_true")
-    parser.add_argument("--vault_path", help=LEXICON_RU["--vault_path"], default=None)
+    parser.add_argument("--vault-path", dest="vault_path", help=LEXICON_RU["--vault-path"], default=None)
+    parser.add_argument("--vault_path", dest="vault_path", help=argparse.SUPPRESS)
     parser.add_argument(
         "--ignore-file",
         help=(
@@ -247,7 +250,7 @@ def main() -> None:
         )
         if ignore_matcher.is_ignored(source_file_for_search):
             raise ValueError(
-                f"source_file занесен в список исключений: {source_file_for_search}. "
+                f"source-file занесен в список исключений: {source_file_for_search}. "
                 f"Ignore file: {ignore_file or DEFAULT_IGNORE_FILE}"
             )
     except (FileNotFoundError, NotADirectoryError, ValueError) as exc:

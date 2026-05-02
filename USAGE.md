@@ -5,33 +5,33 @@
 Скачайте архив для своей ОС из GitHub Releases, распакуйте и запустите бинарник:
 
 ```powershell
-.\obsidian-export-helper.exe <source_file>
+.\obsidian-export-helper.exe <source-file>
 ```
 
 ```cmd
-obsidian-export-helper.exe <source_file>
+obsidian-export-helper.exe <source-file>
 ```
 
 Для Linux/macOS:
 
 ```bash
 chmod +x ./obsidian-export-helper
-./obsidian-export-helper <source_file>
+./obsidian-export-helper <source-file>
 ```
 
 По умолчанию файлы копируются в папку `output/` рядом с бинарником.
 
-- `<source_file>` - путь к исходной заметке Obsidian (`.md`), из которой будут найдены и собраны связанные файлы.
-- Если указать `<source_file>` без расширения, например `учеба`, утилита попробует найти `учеба.md`.
-- Без `--vault_path` корнем vault считается папка, в которой лежит `source_file`.
+- `<source-file>` - путь к исходной заметке Obsidian (`.md`), из которой будут найдены и собраны связанные файлы.
+- Если указать `<source-file>` без расширения, например `учеба`, утилита попробует найти `учеба.md`.
+- Без `--vault-path` корнем vault считается папка, в которой лежит `source-file`.
 
 ## Дополнительные флаги
 
 ```powershell
-.\obsidian-export-helper.exe <source_file> [--vault_path <path>] [--output <path>] [--delete] [--folder] [--ignore-file <path>] [--report] [--verbose]
+.\obsidian-export-helper.exe <source-file> [--vault-path <path>] [--output <path>] [--delete] [--folder] [--ignore-file <path>] [--report] [--verbose]
 ```
 
-- `--vault_path` - корневая папка Obsidian vault. Если не задана, используется папка `source_file`. Если задана, `source_file` должен находиться внутри этой папки.
+- `--vault-path` - корневая папка Obsidian vault. Если не задана, используется папка `source-file`. Если задана, `source-file` должен находиться внутри этой папки.
 - `--output`, `-o` - путь назначения для файлов. Если папки нет, она будет создана.
 - `--delete` - перемещать файлы, то есть удалять их из исходного места после переноса.
 - `--folder` - сохранять структуру папок относительно корня Obsidian vault.
@@ -39,7 +39,7 @@ chmod +x ./obsidian-export-helper
 - `--report` - создать markdown-отчёт `export-report-{filename}.md` рядом с бинарником, а при запуске из исходников - рядом с `main.py`.
 - `--verbose` - подробные логи.
 
-Если `<source_file>` попадает под правило исключения, экспорт не запускается и утилита сообщает, что `source_file` занесён в список исключений.
+Если `<source-file>` попадает под правило исключения, экспорт не запускается и утилита сообщает, что `source-file` занесён в список исключений.
 
 После успешного экспорта в консоль выводится summary:
 
@@ -75,13 +75,13 @@ Export complete:
 Указать корень Obsidian vault явно:
 
 ```powershell
-.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault_path "D:\Vault"
+.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault-path "D:\Vault"
 ```
 
 Создать отчёт по экспорту:
 
 ```powershell
-.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault_path "D:\Vault" -o "D:\Export" --report
+.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault-path "D:\Vault" -o "D:\Export" --report
 ```
 
 Отчёт `export-report-index.md` создаётся рядом с бинарником или `main.py` и содержит:
@@ -103,7 +103,7 @@ drafts/*.md
 ```
 
 ```powershell
-.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault_path "D:\Vault"
+.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault-path "D:\Vault"
 ```
 
 ## Что экспортируется

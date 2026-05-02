@@ -16,10 +16,10 @@ Export one Obsidian note with all linked notes and assets into a portable folder
 
 ### Дополнительные флаги
 ```powershell
-.\obsidian-export-helper.exe <source_file> [--vault_path <path>] [--output <path>] [--delete] [--folder] [--ignore-file <path>] [--report] [--verbose]
+.\obsidian-export-helper.exe <source-file> [--vault-path <path>] [--output <path>] [--delete] [--folder] [--ignore-file <path>] [--report] [--verbose]
 ```
 
-- `--vault_path` — корневая папка Obsidian vault. Если не задана, используется папка `source_file`. Если задана, `source_file` должен находиться внутри этой папки.
+- `--vault-path` — корневая папка Obsidian vault. Если не задана, используется папка `source-file`. Если задана, `source-file` должен находиться внутри этой папки.
 - `--output`, `-o` — путь назначения для файлов. Если папки нет, она будет создана.
 - `--delete` — перемещать файлы (удалять из исходного места) вместо копирования.
 - `--folder` — сохранять структуру папок относительно корня Obsidian.
@@ -27,8 +27,8 @@ Export one Obsidian note with all linked notes and assets into a portable folder
 - `--report` — создать markdown-отчёт `export-report-{filename}.md` рядом с бинарником, а при запуске из исходников — рядом с `main.py`.
 - `--verbose` — подробные логи.
 
-`source_file` должен быть markdown-файлом. Если указать имя без расширения, например `учеба`, утилита попробует найти `учеба.md`.
-Если `source_file` попадает под правило исключения, экспорт не запускается и утилита выводит ошибку, что `source_file` занесён в список исключений.
+`source-file` должен быть markdown-файлом. Если указать имя без расширения, например `учеба`, утилита попробует найти `учеба.md`.
+Если `source-file` попадает под правило исключения, экспорт не запускается и утилита выводит ошибку, что `source-file` занесён в список исключений.
 
 После успешного экспорта в консоль выводится summary:
 
@@ -59,12 +59,12 @@ Export complete:
 
 Указать корень Obsidian vault явно:
 ```powershell
-.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault_path "D:\Vault"
+.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault-path "D:\Vault"
 ```
 
 Создать отчёт по экспорту:
 ```powershell
-.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault_path "D:\Vault" -o "D:\Export" --report
+.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault-path "D:\Vault" -o "D:\Export" --report
 ```
 
 Отчёт `export-report-index.md` создаётся рядом с бинарником или `main.py` и содержит основные параметры запуска, статистику, список скопированных/перемещённых файлов, пропущенные файлы и отсутствующие ссылки.
@@ -80,7 +80,7 @@ drafts/*.md
 ```
 
 ```powershell
-.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault_path "D:\Vault"
+.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault-path "D:\Vault"
 ```
 
 ## Разработка
@@ -90,7 +90,7 @@ drafts/*.md
 
 ### Запуск из исходников
 ```powershell
-python main.py <source_file>
+python main.py <source-file>
 ```
 
 По умолчанию файлы копируются в `output/` рядом с `main.py`.
@@ -126,7 +126,7 @@ git push origin v0.1.0
 
 ### Поток выполнения
 1. `main.py` принимает аргументы CLI и настраивает логирование.
-2. `SearcherAllFiles` ищет ссылки в `source_file` и рекурсивно собирает связанные файлы.
+2. `SearcherAllFiles` ищет ссылки в `source-file` и рекурсивно собирает связанные файлы.
 3. `FileSetter` копирует или перемещает найденные файлы в целевую директорию.
 4. После экспорта печатается summary и, если указан `--report`, создаётся markdown-отчёт.
 
