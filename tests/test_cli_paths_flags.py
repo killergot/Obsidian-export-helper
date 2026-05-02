@@ -19,7 +19,8 @@ def _create_vault(tmp_path: Path) -> tuple[Path, Path]:
 
 
 def _run_main(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
-    cmd = [sys.executable, "main.py", *args]
+    repo_root = Path(__file__).resolve().parents[1]
+    cmd = [sys.executable, str(repo_root / "main.py"), *args]
     result = subprocess.run(
         cmd,
         cwd=cwd,
@@ -35,7 +36,8 @@ def _run_main(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
 
 
 def _run_main_allow_fail(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
-    cmd = [sys.executable, "main.py", *args]
+    repo_root = Path(__file__).resolve().parents[1]
+    cmd = [sys.executable, str(repo_root / "main.py"), *args]
     return subprocess.run(
         cmd,
         cwd=cwd,
@@ -269,3 +271,107 @@ def test_report_includes_summary_and_missing_links(tmp_path: Path) -> None:
     finally:
         if report_file.exists():
             report_file.unlink()
+
+
+def test_default_ignore_file_skips_linked_files(tmp_path: Path) -> None:
+    vault = tmp_path / "vault"
+    private = vault / "private"
+    private.mkdir(parents=True)
+    source_file = vault / "index.md"
+    source_file.write_text(
+        "See [secret](private/secret.md)\nAnd [raw](raw.txt)\n",
+        encoding="utf-8",
+    )
+    (private / "secret.md").write_text("secret", encoding="utf-8")
+    (vault / "raw.txt").write_text("raw", encoding="utf-8")
+    launch_dir = tmp_path / "launch"
+    launch_dir.mkdir()
+    (launch_dir / ".obsidian-export-ignore").write_text(
+        "private/\n*.txt\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "out"
+
+    result = _run_main(
+        [str(source_file), "-o", str(output_dir), "--vault_path", str(vault)],
+        cwd=launch_dir,
+    )
+
+    assert (output_dir / "index.md").exists()
+    assert (output_dir / "secret.md").exists() is False
+    assert (output_dir / "raw.txt").exists() is False
+    assert "- missing links: 0" in result.stdout
+    assert "- ignored files: 2" in result.stdout
+
+
+def test_ignore_file_negation_allows_linked_file(tmp_path: Path) -> None:
+    vault = tmp_path / "vault"
+    private = vault / "private"
+    private.mkdir(parents=True)
+    source_file = vault / "index.md"
+    source_file.write_text("See [keep](private/keep.md)\n", encoding="utf-8")
+    (private / "keep.md").write_text("keep", encoding="utf-8")
+    launch_dir = tmp_path / "launch"
+    launch_dir.mkdir()
+    (launch_dir / ".obsidian-export-ignore").write_text(
+        "private/\n!private/keep.md\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "out"
+
+    result = _run_main(
+        [str(source_file), "-o", str(output_dir), "--vault_path", str(vault)],
+        cwd=launch_dir,
+    )
+
+    assert (output_dir / "index.md").exists()
+    assert (output_dir / "keep.md").exists()
+    assert "- ignored files: 0" in result.stdout
+
+
+def test_custom_ignore_file_flag(tmp_path: Path) -> None:
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    source_file = vault / "index.md"
+    source_file.write_text("See [raw](raw.txt)\n", encoding="utf-8")
+    (vault / "raw.txt").write_text("raw", encoding="utf-8")
+    launch_dir = tmp_path / "launch"
+    launch_dir.mkdir()
+    (launch_dir / "custom.ignore").write_text("*.txt\n", encoding="utf-8")
+    output_dir = tmp_path / "out"
+
+    result = _run_main(
+        [
+            str(source_file),
+            "-o",
+            str(output_dir),
+            "--vault_path",
+            str(vault),
+            "--ignore-file",
+            "custom.ignore",
+        ],
+        cwd=launch_dir,
+    )
+
+    assert (output_dir / "index.md").exists()
+    assert (output_dir / "raw.txt").exists() is False
+    assert "- ignored files: 1" in result.stdout
+
+
+def test_ignored_source_file_has_clear_error(tmp_path: Path) -> None:
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    source_file = vault / "index.md"
+    source_file.write_text("source", encoding="utf-8")
+    launch_dir = tmp_path / "launch"
+    launch_dir.mkdir()
+    (launch_dir / ".obsidian-export-ignore").write_text("index.md\n", encoding="utf-8")
+
+    result = _run_main_allow_fail(
+        [str(source_file), "--vault_path", str(vault)],
+        cwd=launch_dir,
+    )
+
+    assert result.returncode != 0
+    assert "source_file" in result.stderr
+    assert "список исключений" in result.stderr

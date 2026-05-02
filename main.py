@@ -6,6 +6,7 @@ from pathlib import Path
 
 from src.FileClasses.DirectoryWorker import DirectoryWorker
 from src.FileClasses.FileSetter import FileSetter, TransferResult
+from src.FileClasses.IgnoreMatcher import DEFAULT_IGNORE_FILE, IgnoreMatcher
 from src.FileClasses.Searcher import SearcherAllFiles
 from src.lexicon.lexicon import LEXICON_RU
 from src.logger.logger import init_log
@@ -69,9 +70,33 @@ def relative_to_vault(source_file: Path, vault_path: Path) -> Path:
         ) from exc
 
 
+def resolve_ignore_file(launch_dir: Path, ignore_file_arg: str | None) -> Path | None:
+    if ignore_file_arg is None:
+        ignore_file = launch_dir / DEFAULT_IGNORE_FILE
+        return ignore_file if ignore_file.is_file() else None
+
+    ignore_file = Path(ignore_file_arg)
+    if not ignore_file.is_absolute():
+        ignore_file = launch_dir / ignore_file
+    ignore_file = ignore_file.resolve()
+    if not ignore_file.is_file():
+        raise FileNotFoundError(f"ignore file not found: {ignore_file}")
+    return ignore_file
+
+
+def build_ignore_matcher(
+    vault_path: Path, launch_dir: Path, ignore_file_arg: str | None
+) -> tuple[IgnoreMatcher, Path | None]:
+    ignore_file = resolve_ignore_file(launch_dir, ignore_file_arg)
+    if ignore_file is None:
+        return IgnoreMatcher.empty(vault_path), None
+    return IgnoreMatcher.from_file(vault_path, ignore_file), ignore_file
+
+
 def print_summary(
     transfer_result: TransferResult,
     missing_links: list[str],
+    ignored_files: list[str],
     output_path: Path,
 ) -> None:
     transferred_files = transfer_result.transferred_files
@@ -84,6 +109,7 @@ def print_summary(
     print(f"- notes: {notes}")
     print(f"- images: {images}")
     print(f"- missing links: {len(missing_links)}")
+    print(f"- ignored files: {len(ignored_files)}")
     print(f"- output: {output_path}")
 
 
@@ -100,9 +126,11 @@ def write_report(
     vault_path: Path,
     transfer_result: TransferResult,
     missing_links: list[str],
+    ignored_files: list[str],
     resolved_links: dict[str, str],
     delete: bool,
     folder: bool,
+    ignore_file: Path | None,
 ) -> Path:
     report_path = report_path_for(app_dir, source_file)
     transferred_files = transfer_result.transferred_files
@@ -123,12 +151,14 @@ def write_report(
         f"- Output: `{output_path}`",
         f"- Delete source files: `{delete}`",
         f"- Preserve folders: `{folder}`",
+        f"- Ignore file: `{ignore_file or 'None'}`",
         "",
         "## Summary",
         "",
         f"- Notes: {notes}",
         f"- Images: {images}",
         f"- Missing links: {len(missing_links)}",
+        f"- Ignored files: {len(ignored_files)}",
         f"- Copied files: {len(transfer_result.copied_files)}",
         f"- Moved files: {len(transfer_result.moved_files)}",
         f"- Skipped files: {len(transfer_result.skipped_files)}",
@@ -144,9 +174,11 @@ def write_report(
         lines.append("- None")
 
     lines.extend(["", "## Skipped files", ""])
-    skipped_files = transfer_result.skipped_files + [
-        f"{link} (linked target is missing)" for link in missing_links
-    ]
+    skipped_files = (
+        transfer_result.skipped_files
+        + [f"{file_name} (ignored by ignore file)" for file_name in ignored_files]
+        + [f"{link} (linked target is missing)" for link in missing_links]
+    )
     if skipped_files:
         lines.extend(f"- `{file_name}`" for file_name in skipped_files)
     else:
@@ -182,6 +214,14 @@ def main() -> None:
     parser.add_argument("--verbose", help=LEXICON_RU["--verbose"], action="store_true")
     parser.add_argument("--vault_path", help=LEXICON_RU["--vault_path"], default=None)
     parser.add_argument(
+        "--ignore-file",
+        help=(
+            "Path to a gitignore-style ignore file. "
+            f"Defaults to {DEFAULT_IGNORE_FILE} in the launch directory when present."
+        ),
+        default=None,
+    )
+    parser.add_argument(
         "--report",
         help="Generate export-report-{filename}.md next to the binary or main.py.",
         action="store_true",
@@ -194,6 +234,7 @@ def main() -> None:
         init_log(logging.INFO)
 
     try:
+        launch_dir = Path.cwd().resolve()
         explicit_vault_path = Path(args.vault_path).resolve() if args.vault_path else None
         if explicit_vault_path is not None and not explicit_vault_path.is_dir():
             raise NotADirectoryError(LEXICON_RU["vault_path_not_dir"])
@@ -201,11 +242,19 @@ def main() -> None:
         source_file = resolve_source_file(args.source_file, explicit_vault_path)
         vault_path = explicit_vault_path or source_file.parent
         source_file_for_search = relative_to_vault(source_file, vault_path)
+        ignore_matcher, ignore_file = build_ignore_matcher(
+            vault_path, launch_dir, args.ignore_file
+        )
+        if ignore_matcher.is_ignored(source_file_for_search):
+            raise ValueError(
+                f"source_file занесен в список исключений: {source_file_for_search}. "
+                f"Ignore file: {ignore_file or DEFAULT_IGNORE_FILE}"
+            )
     except (FileNotFoundError, NotADirectoryError, ValueError) as exc:
         parser.error(str(exc))
 
     output_path = Path(args.output).resolve()
-    searcher = SearcherAllFiles()
+    searcher = SearcherAllFiles(ignore_matcher=ignore_matcher)
 
     DirectoryWorker.pushd(vault_path)
 
@@ -220,7 +269,11 @@ def main() -> None:
         log.debug(default_output)
         log.debug(links)
         transfer_result = FileSetter.file_transfer(
-            links, str(output_path), del_flag=args.delete, folder_flag=args.folder
+            links,
+            str(output_path),
+            del_flag=args.delete,
+            folder_flag=args.folder,
+            ignore_matcher=ignore_matcher,
         )
     finally:
         DirectoryWorker.popd()
@@ -234,13 +287,20 @@ def main() -> None:
             vault_path=vault_path,
             transfer_result=transfer_result,
             missing_links=searcher.missing_links,
+            ignored_files=searcher.ignored_files,
             resolved_links=searcher.resolved_links,
             delete=args.delete,
             folder=args.folder,
+            ignore_file=ignore_file,
         )
         logging.getLogger(__name__).info("Report written: %s", report_path)
 
-    print_summary(transfer_result, searcher.missing_links, output_path)
+    print_summary(
+        transfer_result,
+        searcher.missing_links,
+        searcher.ignored_files,
+        output_path,
+    )
 
 
 if __name__ == "__main__":

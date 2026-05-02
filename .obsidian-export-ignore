@@ -1,0 +1,19 @@
+# Gitignore-like rules for obsidian-export-helper.
+# Keep this file next to the executable, or in the directory from which you run it.
+# Rules are matched against paths inside the Obsidian vault.
+
+# Ignore a folder and everything inside it.
+# private/
+
+# Ignore one note by its path inside the vault.
+# Notes/secret.md
+
+# Ignore files by extension anywhere in the vault.
+# *.psd
+# *.tmp
+
+# Ignore markdown notes in one folder.
+# drafts/*.md
+
+# Re-include a file that was ignored by an earlier rule.
+# !drafts/keep.md

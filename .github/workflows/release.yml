@@ -61,7 +61,7 @@ jobs:
           ASSET_NAME: ${{ matrix.asset_name }}
           EXECUTABLE_NAME: ${{ matrix.executable_name }}
         run: |
-          python -c "import os, shutil; from pathlib import Path; asset=os.environ['ASSET_NAME']; exe=os.environ['EXECUTABLE_NAME']; package_dir=Path('release')/asset; package_dir.mkdir(parents=True, exist_ok=True); shutil.copy2(Path('dist')/exe, package_dir/exe); shutil.copy2('USAGE.md', package_dir/'USAGE.md'); shutil.make_archive(str(Path('release')/asset), 'zip', root_dir=package_dir)"
+          python -c "import os, shutil; from pathlib import Path; asset=os.environ['ASSET_NAME']; exe=os.environ['EXECUTABLE_NAME']; package_dir=Path('release')/asset; package_dir.mkdir(parents=True, exist_ok=True); shutil.copy2(Path('dist')/exe, package_dir/exe); shutil.copy2('USAGE.md', package_dir/'USAGE.md'); shutil.copy2('.obsidian-export-ignore', package_dir/'.obsidian-export-ignore'); shutil.make_archive(str(Path('release')/asset), 'zip', root_dir=package_dir)"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

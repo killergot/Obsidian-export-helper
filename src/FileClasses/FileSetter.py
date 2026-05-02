@@ -3,6 +3,8 @@ import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from src.FileClasses.IgnoreMatcher import IgnoreMatcher
+
 log = logging.getLogger(__name__)
 
 
@@ -36,12 +38,19 @@ class FileSetter:
         *,
         del_flag: bool = False,
         folder_flag: bool = False,
+        ignore_matcher: IgnoreMatcher | None = None,
     ) -> TransferResult:
         result = TransferResult()
         dst = Path(dst_path)
         dst.mkdir(parents=True, exist_ok=True)
 
         for file_name in sorted(file_list):
+            if ignore_matcher is not None and ignore_matcher.is_ignored(file_name):
+                message = f"{file_name} (ignored by ignore file)"
+                log.info("Skipping %s", message)
+                result.skipped_files.append(message)
+                continue
+
             if not Path(file_name).exists():
                 message = f"{file_name} (source file is missing during transfer)"
                 log.warning("Skipping %s", message)

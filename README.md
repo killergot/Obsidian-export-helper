@@ -16,17 +16,19 @@ Export one Obsidian note with all linked notes and assets into a portable folder
 
 ### Дополнительные флаги
 ```powershell
-.\obsidian-export-helper.exe <source_file> [--vault_path <path>] [--output <path>] [--delete] [--folder] [--report] [--verbose]
+.\obsidian-export-helper.exe <source_file> [--vault_path <path>] [--output <path>] [--delete] [--folder] [--ignore-file <path>] [--report] [--verbose]
 ```
 
 - `--vault_path` — корневая папка Obsidian vault. Если не задана, используется папка `source_file`. Если задана, `source_file` должен находиться внутри этой папки.
 - `--output`, `-o` — путь назначения для файлов. Если папки нет, она будет создана.
 - `--delete` — перемещать файлы (удалять из исходного места) вместо копирования.
 - `--folder` — сохранять структуру папок относительно корня Obsidian.
+- `--ignore-file` — путь к gitignore-подобному файлу исключений. Если флаг не задан, утилита автоматически использует `.obsidian-export-ignore` из папки, из которой запущена команда, когда такой файл есть.
 - `--report` — создать markdown-отчёт `export-report-{filename}.md` рядом с бинарником, а при запуске из исходников — рядом с `main.py`.
 - `--verbose` — подробные логи.
 
 `source_file` должен быть markdown-файлом. Если указать имя без расширения, например `учеба`, утилита попробует найти `учеба.md`.
+Если `source_file` попадает под правило исключения, экспорт не запускается и утилита выводит ошибку, что `source_file` занесён в список исключений.
 
 После успешного экспорта в консоль выводится summary:
 
@@ -35,6 +37,7 @@ Export complete:
 - notes: 12
 - images: 4
 - missing links: 2
+- ignored files: 3
 - output: D:\Export
 ```
 
@@ -65,6 +68,20 @@ Export complete:
 ```
 
 Отчёт `export-report-index.md` создаётся рядом с бинарником или `main.py` и содержит основные параметры запуска, статистику, список скопированных/перемещённых файлов, пропущенные файлы и отсутствующие ссылки.
+
+Исключить файлы из обработки и экспорта:
+
+```gitignore
+# .obsidian-export-ignore рядом с местом запуска команды
+private/
+drafts/*.md
+*.psd
+!drafts/keep.md
+```
+
+```powershell
+.\obsidian-export-helper.exe "D:\Vault\Notes\index.md" --vault_path "D:\Vault"
+```
 
 ## Разработка
 

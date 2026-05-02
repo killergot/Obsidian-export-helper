@@ -5,6 +5,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from src.FileClasses.decor import except_catch
+from src.FileClasses.IgnoreMatcher import IgnoreMatcher
 
 log = logging.getLogger(__name__)
 
@@ -12,10 +13,12 @@ log = logging.getLogger(__name__)
 class SearcherAllFiles:
     """Класс для поиска всех подфайлов"""
 
-    def __init__(self) -> None:
+    def __init__(self, ignore_matcher: IgnoreMatcher | None = None) -> None:
         self.main_file_path: Path | None = None
         self.missing_links: list[str] = []
+        self.ignored_files: list[str] = []
         self.resolved_links: dict[str, str] = {}
+        self.ignore_matcher = ignore_matcher
 
     file_extensions: tuple[str, ...] = (
         ".txt",  # Текстовые файлы
@@ -89,8 +92,11 @@ class SearcherAllFiles:
         """
         result: list[str] = []
         for link in links:
-            existing_file = self.set_exist_file(link)
+            existing_file, ignored = self.resolve_existing_file(link)
             if existing_file is None:
+                if ignored:
+                    log.info("Link target is ignored by ignore file: %s", link)
+                    continue
                 if link not in self.missing_links:
                     self.missing_links.append(link)
                 log.warning("Link found, but target file is missing: %s", link)
@@ -108,6 +114,10 @@ class SearcherAllFiles:
 
     def set_exist_file(self, test: str) -> str | None:
         """Проверка того, существует ли файл"""
+        if self.ignore_matcher is not None:
+            existing_file, _ = self.resolve_existing_file(test)
+            return existing_file
+
         if not test.endswith(self.file_extensions):
             test += ".md"
         if os.path.exists(test):
@@ -121,6 +131,51 @@ class SearcherAllFiles:
                     log.debug(temp.relative_to(self.main_file_path))
                     return str(temp.relative_to(self.main_file_path))
         return None
+
+    def resolve_existing_file(self, test: str) -> tuple[str | None, bool]:
+        if not test.endswith(self.file_extensions):
+            test += ".md"
+        if os.path.exists(test):
+            existing_file = self._relative_to_main_path(Path(test))
+            if self._is_ignored(existing_file, is_dir=Path(test).is_dir()):
+                self._add_ignored_file(existing_file)
+                return None, True
+            return existing_file, False
+
+        for root, dirs, _ in os.walk(self.main_file_path):
+            dirs[:] = [
+                directory
+                for directory in dirs
+                if directory not in {".git", ".obsidian"}
+                and not self._is_ignored(Path(root).joinpath(directory), is_dir=True)
+            ]
+
+            temp = Path(root).joinpath(test)
+            if temp.exists():
+                existing_file = self._relative_to_main_path(temp)
+                if self._is_ignored(existing_file, is_dir=temp.is_dir()):
+                    self._add_ignored_file(existing_file)
+                    return None, True
+                log.debug(temp.relative_to(self.main_file_path))
+                return existing_file, False
+        return None, False
+
+    def _relative_to_main_path(self, path: Path) -> str:
+        if self.main_file_path is None:
+            return path.as_posix()
+        try:
+            return path.resolve().relative_to(self.main_file_path).as_posix()
+        except ValueError:
+            return path.as_posix()
+
+    def _is_ignored(self, path: str | Path, *, is_dir: bool = False) -> bool:
+        if self.ignore_matcher is None:
+            return False
+        return self.ignore_matcher.is_ignored(path, is_dir=is_dir)
+
+    def _add_ignored_file(self, path: str) -> None:
+        if path not in self.ignored_files:
+            self.ignored_files.append(path)
 
     def find_all_links(self, file: str) -> list[str]:
         """
@@ -224,6 +279,10 @@ class SearcherAllFiles:
         :param links:
         :return:
         """
+        if self._is_ignored(file_path):
+            self._add_ignored_file(str(file_path))
+            return
+
         content: str | None = self.read_file(file_path)
         if content is None:
             log.error(file_path + " wrong in name file")
